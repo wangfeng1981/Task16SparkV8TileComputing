@@ -1,0 +1,13 @@
+{
+  "jsfile":"/home/hadoop/IdeaProjects/Task16SparkV8TileComputingToHbase/test.js",
+  "roi":"sys:1",
+  "roi_comment":"roi can be '', roi2 id(sys:123,user:456) , relative filepath of hseg.tlv",
+  "filldata": 0,
+  "dt": 20200101000000,
+  "sdui": "",
+  "mpid_hpid":1001,
+  "out_htable":"sparkv8out",
+  "out_hcol":1,
+  "out_hpidlen":4,
+  "out_xylen":4
+}

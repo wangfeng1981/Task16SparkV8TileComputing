@@ -1,0 +1,26 @@
+{
+  "zookeeper":"vb1",
+  "sparkmaster":"spark://vb1:7077",
+  "connstr":"jdbc:mysql://192.168.56.101:3306/rsbig?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC" ,
+  "user":"bigdata",
+  "pwd":"bigdata",
+  "hbaseuserfiletable":"sparkv8out" ,
+  "productwmts":"/home/hadoop/IdeaProjects/Task17hbasewebservice/productwmts-template.xml",
+  "scriptwmts":"/home/hadoop/IdeaProjects/Task17hbasewebservice/scriptwmts-template.xml",
+  "host": "192.168.56.103",
+  "port": "15900" ,
+  "pedir": "/var/www/html/pe/" , 
+  "userhtable":"sparkv8out", 
+  "userhfami":"tiles",
+  "userhpidblen":4,
+  "useryxblen":2,
+  "tilelocalrootdir":"/home/hadoop/tempdata/tileroot/",
+  "gdaltranslate":"/usr/bin/gdal_translate" ,
+  "gdalwarp":"/usr/bin/gdalwarp",
+
+  "offtask_result_collector": "tcp://127.0.0.1:5500" ,
+  "offtask_export_producer": "tcp://127.0.0.1:5510" ,
+
+  "shpgeojson2hsegtlv":"/home/hadoop/IdeaProjects/zonalstat_commands/shpgeojson2hegbinary/shpgeojson2hegbinary"
+
+}

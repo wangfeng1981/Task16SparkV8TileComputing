@@ -1,0 +1,11 @@
+{
+  "dsname":"mod/ndvi",
+  "jsfile":"",
+  "roi":"sys:1",
+  "roi_comment":"roi can be '', roi2 id(sys:123,user:456) , relative filepath of hseg.tlv",
+  "filldata": -19999,
+  "dt": 20200101000000,
+  "sdui": "",
+  "validMinInc":1,
+  "validMaxInc":10000
+}
