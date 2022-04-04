@@ -7,6 +7,8 @@ package com.pixelengine;
 //update 2022-3-24 0459
 //update 2022-3-29 2206
 //update 2022-3-31 0328
+//udpate 2022-4-3 2010
+//update 2022-4-4 use String.equals replace String.==
 //
 /////////////////////////////////////////////////////////
 
@@ -14,6 +16,7 @@ package com.pixelengine;
 import com.google.gson.Gson;
 
 import com.pixelengine.DataModel.*;
+import org.apache.commons.lang.ArrayUtils;
 
 
 import java.sql.*;
@@ -1855,7 +1858,7 @@ public class JRDBHelperForWebservice {
                 builder.wholePeriod.stopDt =  (builder.wholePeriod.stopDt /10000000000L)*10000000000L ;
             }
 
-            if( builder.repeatType == null || builder.repeatType=="" || builder.repeatType=="m")
+            if( builder.repeatType == null || builder.repeatType.equals("") || builder.repeatType.equals("m") )//2022-4-4
             {
                 String dtcondition1 = " hcol >= "+builder.wholePeriod.startDt  ;
                 String dtcondition2 = " hcol <= "+builder.wholePeriod.stopDt ;
@@ -1874,14 +1877,14 @@ public class JRDBHelperForWebservice {
                 while (rs.next()) {
                     dtlist.add( rs.getLong(1) ) ;
                 }
-                if( builder.repeatType == null || builder.repeatType=="")
+                if( builder.repeatType == null || builder.repeatType.equals("") )//2022-4-4
                 {
                     JDtCollection[] dtcolArray = new JDtCollection[1];
                     dtcolArray[0] = new JDtCollection() ;
                     dtcolArray[0].key = "" ;
-                    dtcolArray[0].datetimes = dtlist.toArray(new Long[1]) ;
+                    dtcolArray[0].datetimes = ArrayUtils.toPrimitive( dtlist.toArray(new Long[0]) );//2022-4-3
                     return dtcolArray ;
-                }else //if( builder.repeatType=="m")
+                }else //if( builder.repeatType.equals("m") )
                 {
                     long periodstartval = builder.repeatPeriod.startDt % 100000000L ;
                     long periodstopval = builder.repeatPeriod.stopDt   % 100000000L ;
@@ -1900,7 +1903,7 @@ public class JRDBHelperForWebservice {
                             if( tempDtList != null && tempDtList.size()>0 ){
                                 JDtCollection collection1 = new JDtCollection() ;
                                 collection1.key = String.valueOf(lastYearMonth) ;
-                                collection1.datetimes = tempDtList.toArray(new Long[1]) ;
+                                collection1.datetimes = ArrayUtils.toPrimitive( tempDtList.toArray(new Long[0]) );//2022-4-3
                                 collectionList.add( collection1 ) ;
                             }
                             lastYearMonth = yearMonth ;
@@ -1914,12 +1917,12 @@ public class JRDBHelperForWebservice {
                     if( tempDtList != null && tempDtList.size()>0 ){
                         JDtCollection collection1 = new JDtCollection() ;
                         collection1.key = String.valueOf(lastYearMonth) ;
-                        collection1.datetimes = tempDtList.toArray(new Long[1]) ;
+                        collection1.datetimes = ArrayUtils.toPrimitive( tempDtList.toArray(new Long[0]) );//2022-4-3 tempDtList.toArray(new Long[1]) ;
                         collectionList.add( collection1 ) ;
                     }
                     return collectionList.toArray(new JDtCollection[1]) ;
                 }
-            }else if( builder.repeatType=="y")
+            }else if( builder.repeatType.equals("y" ) )//2022-4-4
             {
                 int startyear = (int)(builder.wholePeriod.startDt / 10000000000L) ;
                 int stopyear  = (int)(builder.wholePeriod.stopDt  / 10000000000L) ;
@@ -1964,7 +1967,7 @@ public class JRDBHelperForWebservice {
                     if( dtlist.size()>0 ){
                         JDtCollection collection = new JDtCollection() ;
                         collection.key = String.valueOf(xyear) ;
-                        collection.datetimes = dtlist.toArray(new Long[1]) ;
+                        collection.datetimes = ArrayUtils.toPrimitive( dtlist.toArray(new Long[0]) );//2022-4-3
                         collectionList.add(collection);
                     }
                 }

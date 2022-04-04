@@ -1,5 +1,6 @@
 package com.pixelengine.tools;
 /// 2022-3-5 2210
+/// 2022-4-4 add writeBinaryFile method.
 
 
 import java.io.BufferedOutputStream;
@@ -85,6 +86,38 @@ public class FileDirTool {
         try {
             stream = new BufferedOutputStream(new FileOutputStream(filename));
             stream.write(content.getBytes());
+            stream.flush();
+            stream.close();
+            return true ;
+        }catch (IOException e){
+            e.printStackTrace();
+            return false ;
+        }
+    }
+
+    /// 2022-4-4 write string into text file
+    static public boolean writeToTextFile(String filename,String content)
+    {
+        BufferedOutputStream stream = null;
+        try {
+            stream = new BufferedOutputStream(new FileOutputStream(filename));
+            stream.write(content.getBytes());
+            stream.flush();
+            stream.close();
+            return true ;
+        }catch (IOException e){
+            e.printStackTrace();
+            return false ;
+        }
+    }
+
+    /// 2022-4-4 write bytearray into binary file
+    static public boolean writeToBinaryFile(String filename, byte[] bytesContent )
+    {
+        BufferedOutputStream stream = null;
+        try {
+            stream = new BufferedOutputStream(new FileOutputStream(filename));
+            stream.write(bytesContent);
             stream.flush();
             stream.close();
             return true ;

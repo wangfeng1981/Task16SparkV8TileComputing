@@ -13,4 +13,16 @@ public class JStatisticData implements Serializable {
     public double areakm2=0;
     public double allCnt=0;
     public double fillCnt=0;
+
+    public double computeMean() {
+        if( validCnt>0 ) return sum / validCnt ;
+        else return 0 ;
+    }
+
+    public double computeStdev() {
+        if( validCnt==0 ) return 0 ;
+        double mean = computeMean() ;
+        double var = sq_sum / validCnt - mean*mean ;
+        return Math.sqrt(var) ;
+    }
 }

@@ -1,13 +1,23 @@
 {
   "dsname":"mod/ndvi",
   "jsfile":"",
-  "roi":"sys:1",
-  "roi_comment":"roi can be '', roi2 id(sys:123,user:456) , relative filepath of hseg.tlv",
+  "roi":"sys:1","roi_comment":"roi can be '', roi2 id(sys:123,user:456) , absolute filepath of hseg.tlv",
   "filldata": -19999,
-  "startdt": 20200500000000,
-  "stopdt":  20200800000000,
-  "sdui": "",
-  "validMinInc":1,
-  "validMaxInc":10000
+  "validMinInc": 0 ,
+  "validMaxInc": 10000,
+  "dt":20220404000000,
+  "sdui":"",
+  "method":"max",
+
+  "whole_start":20190100000000,
+  "whole_start_inc":1,
+  "whole_stop" :20220100000000,
+  "whole_stop_inc":1,
+  "repeat_type":"",
+  "repeat_start":0,
+  "repeat_start_inc":0,
+  "repeat_stop":0 ,
+  "repeat_stop_inc":0,
+  "repeat_stopnextyear":0
 }
 

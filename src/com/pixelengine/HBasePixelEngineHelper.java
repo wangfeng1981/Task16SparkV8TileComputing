@@ -5,6 +5,7 @@ package com.pixelengine;
 // 这个接口是C++回调Java进程的
 //update 2022-2-13 1020
 //update 2022-3-19
+//update 2022-4-3 0800
 //
 /////////////////////////////////////////////////////////
 
@@ -27,6 +28,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 //import org.apache.spark.sql.catalyst.plans.logical.Except;
 //import shapeless.ops.nat;
@@ -565,6 +567,7 @@ public class HBasePixelEngineHelper {
 
 
     //get tile data array
+    //deprecated 2022-4-3
     public TileData getTileDataArray(long fromdtInclude,long todtInclude ,
                                      String dsName, int[] bandindices ,
                                      int z,int y,int x,
@@ -821,6 +824,107 @@ public class HBasePixelEngineHelper {
             System.out.println("Failed, hbaseHelper.readBinaryDataIntoHBase return a null byte array.");
         }
         return tlvdata ;
+    }
+
+    //2022-4-3
+    public TileData getTileDataCollection( String dsName, long[] dtarr, int z,int y,int x)
+    {
+        System.out.println("in java getTileDataCollection dtarr.len " + dtarr.length + " z,y,x " + z + "," + y+","+x ) ;
+
+        try {
+            JRDBHelperForWebservice rdb = new JRDBHelperForWebservice() ;
+            JProduct pdt = rdb.rdbGetProductInfoByName(dsName) ;
+            if( pdt==null ){
+                errorMessage="Error : not find info of "+dsName ;
+                return null ;
+            }
+            if( pdt.bandList.size() == 0 ){
+                errorMessage = "Error : empty bandlist." ;
+                return null ;
+            }
+            int[] bandArr = new int[pdt.bandList.size()];
+            for(int ii=0;ii<bandArr.length;++ii) bandArr[ii] = ii ;
+            List<Long> dtlist = new ArrayList<>() ;
+            List<TileData> tempTileDataList = new ArrayList<>() ;
+            for(int idt = 0 ; idt < dtarr.length; ++ idt )
+            {
+                long dt1 = dtarr[idt] ;
+                TileData tempTileData1 = this.getTileData(dt1,dsName,bandArr,z,y,x) ;
+                if( tempTileData1!=null )
+                {
+                    dtlist.add(dt1) ;
+                    tempTileDataList.add(tempTileData1) ;
+                }
+            }
+
+            if( dtlist.size()==0 ){
+                errorMessage = "Error : no valid datetime data." ;
+                return null ;
+            }
+
+            TileData resultTileData = new TileData( dtlist.size() ) ;
+            int index = 0;
+            for( TileData td1 : tempTileDataList)
+            {
+                if( index==0 ){
+                    resultTileData.x = x;
+                    resultTileData.y = y;
+                    resultTileData.z = z;
+                    resultTileData.dataType = td1.dataType ;
+                    resultTileData.nband =  td1.nband ;
+                    resultTileData.width = td1.width;
+                    resultTileData.height = td1.height ;
+                }
+                resultTileData.datetimeArray[index] = dtlist.get(index) ;
+                resultTileData.tiledataArray[index] = td1.tiledataArray[0] ;
+                ++index ;
+            }
+            return resultTileData ;
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            errorMessage = "Error : getTileDataCollection exception of " + e.getMessage() ;
+            return null ;
+        }
+    }
+
+    //2022-4-3
+    public JDtCollection[] buildDatetimeCollections(
+            String dsName,
+            long whole_start ,
+            int whole_start_inc , //0 or 1
+            long whole_stop ,
+            int whole_stop_inc ,
+            String repeat_type , // '' 'm' 'y'
+            long repeat_start,
+            int repeat_start_inc,
+            long repeat_stop,
+            int repeat_stop_inc,
+            int repeat_stop_nextyear //0 or 1
+    ){
+        System.out.println("in java buildDatetimeCollections " ) ;
+
+        try {
+            JRDBHelperForWebservice rdb = new JRDBHelperForWebservice();
+            JDtCollectionBuilder dtcBuilder = new JDtCollectionBuilder() ;
+            dtcBuilder.wholePeriod.startDt = whole_start ;
+            dtcBuilder.wholePeriod.startInclusive = whole_start_inc==1 ;
+            dtcBuilder.wholePeriod.stopDt = whole_stop ;
+            dtcBuilder.wholePeriod.stopInclusive = whole_stop_inc==1 ;
+            dtcBuilder.repeatType = repeat_type ;
+            dtcBuilder.repeatPeriod.startDt = repeat_start ;
+            dtcBuilder.repeatPeriod.startInclusive = repeat_start_inc==1 ;
+            dtcBuilder.repeatPeriod.stopDt = repeat_stop ;
+            dtcBuilder.repeatPeriod.stopInclusive = repeat_stop_inc==1 ;
+            dtcBuilder.repeatPeriod.stopInNextYear = repeat_stop_nextyear ;
+
+            JDtCollection[] dtcArray = rdb.buildDtCollection(dsName,dtcBuilder) ;
+            return dtcArray ;
+        }catch (Exception ex)
+        {
+            errorMessage = "Error : buildDatetimeCollections exception " + ex.getMessage();
+            return null ;
+        }
+
     }
 }
 

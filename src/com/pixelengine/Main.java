@@ -4,10 +4,8 @@ package com.pixelengine;
 
 import com.google.gson.Gson;
 import com.pixelengine.DataModel.*;
-import com.pixelengine.tools.JRoi2Loader;
-import com.pixelengine.tools.JScriptTools;
-import com.pixelengine.tools.JTileRangeTool;
-import com.pixelengine.tools.Roi2HsegTlv2LonLatExtent;
+import com.pixelengine.tools.*;
+import org.apache.calcite.materialize.Lattice;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
@@ -83,6 +81,7 @@ public class Main {
         System.out.println("v1.3.0 add mysql staff 2022-3-24.") ;
         System.out.println("v2.0.2 add region stat and serial stat. 2022-3-27") ;
         System.out.println("v2.0.3 test dtcollection ok. 2022-3-31") ;
+        System.out.println("v2.1.2 make serial working. 2022-4-4") ;
         System.out.println("usage:");
         System.out.println("spark-submit --master spark://xxx:7077 Task16SparkV8TileComputingToHbase.jar ");
         System.out.println("    task17config.json ");
@@ -108,40 +107,6 @@ public class Main {
         System.out.println("inputOrderfile:"+inputOrderfile);
         System.out.println("outputJsonFile:"+outputJsonFilename);
 
-
-        //some unit test for dtcollection, need delete this block of codes.
-        {
-            WConfig.init(task17configfile);
-            JRDBHelperForWebservice.init(WConfig.getSharedInstance().connstr,
-                    WConfig.getSharedInstance().user,
-                    WConfig.getSharedInstance().pwd);
-            JRDBHelperForWebservice rdb = new JRDBHelperForWebservice();
-
-
-            JDtCollectionBuilder builder1 = new JDtCollectionBuilder() ;
-            builder1.wholePeriod.startDt = 20010101000000L ;
-            builder1.wholePeriod.startInclusive=false;
-            builder1.wholePeriod.stopDt = 20051206000000L ;
-            builder1.wholePeriod.stopInclusive=false;
-            builder1.repeatType = "y" ;
-            builder1.repeatPeriod.startDt = 10001205000000L;
-            builder1.repeatPeriod.stopDt  = 10000211000000L;
-            builder1.repeatPeriod.stopInNextYear = 1 ;
-            JDtCollection[] collarr1 = rdb.buildDtCollection("test/dtcollection" , builder1) ;
-
-
-            System.out.println("unit test out.");
-        }
-
-
-
-
-
-
-
-
-
-
         try {
             if( tasktype.compareTo("jshbase") == 0 ){
                 WTileComputing2HBaseProcessor tc = new WTileComputing2HBaseProcessor();
@@ -161,8 +126,12 @@ public class Main {
             }
             else if( tasktype.compareTo("serial")==0 )
             {
-
-
+                WTileComputingSerialProcessor proc = new WTileComputingSerialProcessor() ;
+                proc.orderJsonFile = inputOrderfile ;
+                proc.task17configFile = task17configfile ;
+                proc.resultJsonFile = outputJsonFilename ;
+                int state = proc.runit() ;
+                System.exit(state);
             }
             else{
                 System.out.println("unsupported task type:"+ tasktype);
@@ -178,6 +147,75 @@ public class Main {
 }
 
 
+/*
+//some unit test for dtcollection, need delete this block of codes.
+{
+    System.out.println("-------------- unit test -----------------\n-\n-\n-");
+    WConfig.init(task17configfile);
+    JRDBHelperForWebservice.init(WConfig.getSharedInstance().connstr,
+    WConfig.getSharedInstance().user,
+    WConfig.getSharedInstance().pwd);
+    JRDBHelperForWebservice rdb = new JRDBHelperForWebservice();
 
 
+    JDtCollectionBuilder builder1 = new JDtCollectionBuilder() ;
+    builder1.wholePeriod.startDt = 20010101000000L ;
+    builder1.wholePeriod.startInclusive=false;
+    builder1.wholePeriod.stopDt = 20201206000000L ;
+    builder1.wholePeriod.stopInclusive=false;
+    builder1.repeatType = "" ;
+    builder1.repeatPeriod.startDt = 0;
+    builder1.repeatPeriod.stopDt  = 0;
+    builder1.repeatPeriod.stopInNextYear = 1 ;
+    JDtCollection[] collarr1 = rdb.buildDtCollection("mod/ndvi" , builder1) ;
+
+    HBasePixelEngineHelper helper = new HBasePixelEngineHelper() ;
+
+    JDtCollection tempdtc1 = new JDtCollection() ;
+    tempdtc1.key = "test" ;
+    tempdtc1.datetimes = new long[] {20010101000000L,20200500000000L
+    ,20200600000000L,20210100000000L,20220000000000L } ;
+    JDtCollection[] dtcollection = helper.buildDatetimeCollections("mod/ndvi"
+    ,20000101000000L,1,20210101000000L,1
+    ,"",0,0,0,0,0);
+    TileData testtiledata = helper.getTileDataCollection("mod/ndvi", tempdtc1.datetimes,0,0,0);
+
+    //unit test js
+    {
+    HBasePeHelperCppConnector cc = new HBasePeHelperCppConnector() ;
+    String testScript = "function main(){" +
+    "let dtcoll = pe.RemoteBuildDtCollections('mod/ndvi',20010101000000,1,20210101000000,1,'',0,0,0,0,0);" +
+    "let dscoll = pe.DatasetCollections('mod/ndvi',dtcoll) ;" +
+    "let ds = pe.CompositeDsCollections(dscoll,pe.CompositeMethodMax,-2000,10000,-19999) ;" +
+    "return ds;" +
+    "}" ;
+    TileComputeResult tcr = cc.RunScriptForTileWithoutRenderWithExtra(
+    "com/pixelengine/HBasePixelEngineHelper"
+    , testScript, "" , 0,0,0
+    ) ;
+    FileDirTool.writeToBinaryFile("test-tileresultdata-raw" , tcr.binaryData) ;
+    }
+
+
+    {
+    long[] dtarr = new long[]{20200500000000L,20200600000000L,20200700000000L} ;
+    for(int idt = 0 ; idt < dtarr.length;++ idt )
+    {
+    String extraText = "{\"datetime\":" + dtarr[idt] + "}" ;
+    HBasePeHelperCppConnector cc = new HBasePeHelperCppConnector() ;
+    String testScript = "function main(){" +
+    "let ds = pe.Dataset('mod/ndvi',pe.extraData.datetime) ;" +
+    "return ds;" +
+    "}" ;
+    TileComputeResult tcr = cc.RunScriptForTileWithoutRenderWithExtra(
+    "com/pixelengine/HBasePixelEngineHelper"
+    , testScript, extraText , 0,0,0
+    ) ;
+    FileDirTool.writeToBinaryFile("test-tileresultdata-raw"+idt , tcr.binaryData) ;
+    }
+    }
+
+    System.out.println("unit test out.");
+}
+*/
 
