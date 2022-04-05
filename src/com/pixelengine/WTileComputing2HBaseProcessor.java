@@ -355,8 +355,7 @@ public class WTileComputing2HBaseProcessor implements Serializable {
 
         //update mysql tbproduct record
         String pdtName = "user/" + tcHbOrder.mpid_hpid ;
-        boolean updatepdtok = rdb.updateProductNameAndInfo(tcHbOrder.mpid_hpid,
-                pdtName,
+        boolean updatepdtok = rdb.updateProductInfo(tcHbOrder.mpid_hpid,
                 projStr,
                 0,
                 maxZoom,

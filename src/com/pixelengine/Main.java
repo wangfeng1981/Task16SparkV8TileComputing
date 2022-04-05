@@ -83,6 +83,7 @@ public class Main {
         System.out.println("v2.0.3 test dtcollection ok. 2022-3-31") ;
         System.out.println("v2.1.2 make serial working. 2022-4-4") ;
         System.out.println("v2.1.3 shikuang serial bugfixed. 2022-4-5") ;
+        System.out.println("v2.1.4 do not update dsname. 2022-4-5") ;
         System.out.println("usage:");
         System.out.println("spark-submit --master spark://xxx:7077 Task16SparkV8TileComputingToHbase.jar ");
         System.out.println("    task17config.json ");

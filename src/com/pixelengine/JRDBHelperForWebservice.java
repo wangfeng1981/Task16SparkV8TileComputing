@@ -9,6 +9,7 @@ package com.pixelengine;
 //update 2022-3-31 0328
 //udpate 2022-4-3 2010
 //update 2022-4-4 use String.equals replace String.==
+//update 2022-4-5 updateProductInfo
 //
 /////////////////////////////////////////////////////////
 
@@ -1798,6 +1799,58 @@ public class JRDBHelperForWebservice {
             preparedStmt2.setString(1 , name);
             preparedStmt2.setString(2, pdtinfojsonstr);
             preparedStmt2.setInt   (3, mypid);
+            preparedStmt2.executeUpdate();
+            return true ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : updateProductNameAndInfo exception , " + ex.getMessage() ) ;
+            return false ;
+        }
+    }
+    //2022-4-5
+    public boolean updateProductInfo(int mypid,
+                                            String proj,
+                                            Integer minZoom,Integer maxZoom,
+                                            Integer dataType,
+                                            Integer timeType,
+                                            String hTableName,
+                                            Integer tileWid,
+                                            Integer tileHei,
+                                            String compress,
+                                            Integer styleid ){
+        //        {
+        //            "proj":"EPSG:4326",
+        //                "minZoom":0,
+        //                "maxZoom":5,
+        //                "dataType":3,
+        //                "timeType":5,
+        //                "hTableName":"sparkv8out",
+        //                "tileWid":256,
+        //                "tileHei":256,
+        //                "compress":"deflate",
+        //                "styleid":0
+        //        }
+        Gson gson = new Gson() ;
+        Map<String, Object> pdtinfo = new HashMap<>();
+        pdtinfo.put("proj", proj);
+        pdtinfo.put("minZoom", minZoom);
+        pdtinfo.put("maxZoom", maxZoom);
+        pdtinfo.put("dataType", dataType);
+        pdtinfo.put("timeType", timeType);
+        pdtinfo.put("hTableName", hTableName);
+        pdtinfo.put("tileWid", tileWid);
+        pdtinfo.put("tileHei", tileHei);
+        pdtinfo.put("compress", compress);
+        pdtinfo.put("styleid", styleid);
+
+        String pdtinfojsonstr = gson.toJson(pdtinfo) ;
+
+        try{
+            //
+            String query2 = "UPDATE tbproduct SET info=? WHERE pid=?";
+            PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
+            preparedStmt2.setString(1, pdtinfojsonstr);
+            preparedStmt2.setInt   (2, mypid);
             preparedStmt2.executeUpdate();
             return true ;
         }catch (Exception ex )
