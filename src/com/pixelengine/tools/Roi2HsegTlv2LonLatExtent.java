@@ -8,7 +8,7 @@ import com.pixelengine.DataModel.WConfig;
 import com.pixelengine.HBasePeHelperCppConnector;
 import com.pixelengine.HBasePixelEngineHelper;
 import com.pixelengine.JRDBHelperForWebservice;
-import scala.reflect.io.File;
+//import scala.reflect.io.File;
 
 //传入 roi2id 或者 相对路径 计算经纬度四角范围
 public class Roi2HsegTlv2LonLatExtent {

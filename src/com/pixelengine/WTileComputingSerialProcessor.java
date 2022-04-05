@@ -206,19 +206,41 @@ public class WTileComputingSerialProcessor implements Serializable {
 
             //make all task params
             ArrayList< Tuple2<String,SparkTaskParams> > paramsList = new ArrayList<>() ;
-            for(int icoll = 0 ; icoll < dtcollectionArray.length ; ++ icoll  )
+            if( order.repeat_type.equals("m") || order.repeat_type.equals("y") )
             {
-                for( TileXYZ tilexyz : tileXyzArray)
+                //年，月重复序列
+                for(int icoll = 0 ; icoll < dtcollectionArray.length ; ++ icoll  )
                 {
-                    SparkTaskParams oneParams = new SparkTaskParams();
-                    oneParams.x = tilexyz.x ;
-                    oneParams.y = tilexyz.y ;
-                    oneParams.z = tilexyz.z ;
-                    oneParams.dtCollection = dtcollectionArray[icoll].datetimes ;
-                    Tuple2<String,SparkTaskParams> tuple = new Tuple2<>( dtcollectionArray[icoll].key , oneParams) ;
-                    paramsList.add(tuple) ;
+                    for( TileXYZ tilexyz : tileXyzArray)
+                    {
+                        SparkTaskParams oneParams = new SparkTaskParams();
+                        oneParams.x = tilexyz.x ;
+                        oneParams.y = tilexyz.y ;
+                        oneParams.z = tilexyz.z ;
+                        oneParams.dtCollection = dtcollectionArray[icoll].datetimes ;
+                        Tuple2<String,SparkTaskParams> tuple = new Tuple2<>( dtcollectionArray[icoll].key , oneParams) ;
+                        paramsList.add(tuple) ;
+                    }
+                }
+            }else{
+                //2022-4-5 实况序列
+                for(int icoll = 0 ; icoll < dtcollectionArray[0].datetimes.length ; ++ icoll  )
+                {
+                    for( TileXYZ tilexyz : tileXyzArray)
+                    {
+                        SparkTaskParams oneParams = new SparkTaskParams();
+                        oneParams.x = tilexyz.x ;
+                        oneParams.y = tilexyz.y ;
+                        oneParams.z = tilexyz.z ;
+                        oneParams.dtCollection = new long[1] ;// dtcollectionArray[icoll].datetimes ;
+                        oneParams.dtCollection[0] = dtcollectionArray[0].datetimes[icoll] ;
+                        String daykey = String.valueOf( dtcollectionArray[0].datetimes[icoll]/1000000L ) ;
+                        Tuple2<String,SparkTaskParams> tuple = new Tuple2<>( daykey , oneParams) ;
+                        paramsList.add(tuple) ;
+                    }
                 }
             }
+
             System.out.println("total task count is :"+ paramsList.size() );
 
             Integer compositeMethod = 1;//min-1,max-2,ave-3,sum-4
