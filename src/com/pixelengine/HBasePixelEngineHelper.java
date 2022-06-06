@@ -6,6 +6,7 @@ package com.pixelengine;
 //update 2022-2-13 1020
 //update 2022-3-19
 //update 2022-4-3 0800
+//update 2022-6-6 1027 add debug infos output for finding bugs in getDataCollection
 //
 /////////////////////////////////////////////////////////
 
@@ -64,7 +65,7 @@ public class HBasePixelEngineHelper {
     //get one tile data
     public TileData getTileData( long dt, String dsName,int[] bandindices,int z,int y,int x)
     {
-        System.out.println("in java getTileData zyx: "+z + "," + y+","+x ) ;
+        System.out.println("in java getTileData z,y,x,dt: "+z + "," + y+","+x+","+dt ) ;//2022-6-6
         TileData tiledata = new TileData(1) ;
 
         tiledata.datetimeArray[0] = dt ;
@@ -77,6 +78,7 @@ public class HBasePixelEngineHelper {
         if( dsName.length() == 0 )
         {
             errorMessage="Error : dsName is empty" ;
+            System.out.println("debug " + errorMessage);//2022-6-6
             return null;
         }
 
@@ -89,6 +91,7 @@ public class HBasePixelEngineHelper {
         JProduct pdt = rdb.rdbGetProductInfoByName(dsName) ;
         if( pdt==null ){
             errorMessage="Error : not find product of "+dsName ;
+            System.out.println("debug " + errorMessage);//2022-6-6
             return null ;
         }
         //build usebandlist by input bandindices
@@ -150,12 +153,14 @@ public class HBasePixelEngineHelper {
 
                         }else{
                             errorMessage = "Error : pdt.source is not supported for '" + pdt.source+"'. " ;
+                            System.out.println("debug " + errorMessage);//2022-6-6
                             return null ;
                         }
 
 
                         if( lastCellData==null ){
                             errorMessage = "get emtpty cell data.";
+                            System.out.println("debug " + errorMessage);//2022-6-6
                             return null ;
                         }
                         lasthpid = newhpid ;
@@ -168,6 +173,7 @@ public class HBasePixelEngineHelper {
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 errorMessage = "Error : getTileData exception of " + e.getMessage() ;
+                System.out.println("debug " + errorMessage);//2022-6-6
                 return null ;
             }
         }else{
@@ -205,6 +211,7 @@ public class HBasePixelEngineHelper {
                         z,y,x) ;
                 if( lastCellData==null ){
                     errorMessage = "get emtpty cell data hcol:" + onlyDataItem.hcol;
+                    System.out.println("debug " + errorMessage);//2022-6-6
                     return null ;
                 }
                 System.arraycopy(lastCellData, 0 ,
@@ -215,6 +222,7 @@ public class HBasePixelEngineHelper {
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 errorMessage = "Error : getTileData exception of " + e.getMessage() ;
+                System.out.println("debug " + errorMessage);//2022-6-6
                 return null ;
             }
         }
@@ -836,10 +844,12 @@ public class HBasePixelEngineHelper {
             JProduct pdt = rdb.rdbGetProductInfoByName(dsName) ;
             if( pdt==null ){
                 errorMessage="Error : not find info of "+dsName ;
+                System.out.println("debug " + errorMessage);//2022-6-6
                 return null ;
             }
             if( pdt.bandList.size() == 0 ){
                 errorMessage = "Error : empty bandlist." ;
+                System.out.println("debug " + errorMessage);//2022-6-6
                 return null ;
             }
             int[] bandArr = new int[pdt.bandList.size()];
@@ -852,13 +862,17 @@ public class HBasePixelEngineHelper {
                 TileData tempTileData1 = this.getTileData(dt1,dsName,bandArr,z,y,x) ;
                 if( tempTileData1!=null )
                 {
+                    System.out.println("debug has dt:"+dt1);//2022-6-6
                     dtlist.add(dt1) ;
                     tempTileDataList.add(tempTileData1) ;
+                }else{
+                    System.out.println("debug no dt:"+dt1);//2022-6-6
                 }
             }
 
             if( dtlist.size()==0 ){
                 errorMessage = "Error : no valid datetime data." ;
+                System.out.println("debug " + errorMessage);//2022-6-6
                 return null ;
             }
 
@@ -883,6 +897,7 @@ public class HBasePixelEngineHelper {
         } catch (Exception e) {
             // TODO Auto-generated catch block
             errorMessage = "Error : getTileDataCollection exception of " + e.getMessage() ;
+            System.out.println("debug " + errorMessage);//2022-6-6
             return null ;
         }
     }
