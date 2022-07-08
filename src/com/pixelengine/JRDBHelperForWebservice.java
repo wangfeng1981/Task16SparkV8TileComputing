@@ -9,8 +9,20 @@ package com.pixelengine;
 //update 2022-3-31 0328
 //udpate 2022-4-3 2010
 //update 2022-4-4 use String.equals replace String.==
-//update 2022-4-5 updateProductInfo
-//
+//update 2022-4-5 updateProductInfo updateOfftaskByWorkerResult
+//update 2022-4-6 user with img
+//update 2022-4-7 rdbGetOfftaskList
+//update 2022-4-9 new offtask not write utime; getOfftask
+//udpate 2022-4-17 omc.
+//update 2022-4-18 omc.
+//update 2022-5-10 new script
+//update 2022-5-11
+//udpate 2022-5-15
+//udpate 2022-5-24
+//2022-5-26
+//2022-6-12 updateStyle
+//2022-7-3 rdbGetGreaterNearestHCol
+//2022-7-8 dateitem add dt0 dt1
 /////////////////////////////////////////////////////////
 
 
@@ -52,7 +64,7 @@ public class JRDBHelperForWebservice {
 
     public static String getCurrentDatetimeStr(){
         LocalDateTime myDateObj = LocalDateTime.now();
-        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedDate = myDateObj.format(myFormatObj);
         return formattedDate;
     }
@@ -82,13 +94,14 @@ public class JRDBHelperForWebservice {
     }
 
     //获取全部可见的分类，不包括产品,2021-11-28
+    //2022-5-24 updated
     public ArrayList<JCategory> rdbGetCategories()
     {
         try {
             ArrayList<JCategory> result = new ArrayList<>() ;
 
             Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
-            String sqlstr = "SELECT * FROM tbcategory WHERE visible=1 ORDER BY iorder ASC";
+            String sqlstr = "SELECT * FROM tbcategory WHERE itype=1 AND visible=1 ORDER BY iorder ASC";
             ResultSet rs = stmt.executeQuery(sqlstr) ;
             while (rs.next()) {
                 JCategory r1 = new JCategory();
@@ -194,6 +207,7 @@ public class JRDBHelperForWebservice {
         }
     }
 
+    //deprecated 2022-4-9
     public String rdbGetOffTaskJson(int oftid)   {
         try {
             Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
@@ -341,19 +355,22 @@ public class JRDBHelperForWebservice {
         }
     }
 
-    public int rdbNewUserScript( int uid, String script0,int type){
+
+    //2022-5-10
+    public int rdbNewUserScript( int uid,String scriptRelPath ){
         try
         {
-            long dt0 = this.getCurrentDatetime();
-            String query = " insert into tbscript (title, scriptcontent, updatetime, uid, type)"
+            String dtstr = this.getCurrentDatetimeStr();
+            String title = "新建脚本 " + dtstr ;
+            String query = " insert into tbscript (title, jsfile, utime, uid, state)"
                     + " values (?, ?, ?, ?, ?)";
             // create the mysql insert preparedstatement
             PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-            preparedStmt.setString (1, "no-title");
-            preparedStmt.setString (2, script0);
-            preparedStmt.setLong   (3, dt0);
+            preparedStmt.setString (1, title);
+            preparedStmt.setString (2, scriptRelPath);
+            preparedStmt.setString   (3, dtstr);
             preparedStmt.setInt    (4, uid);
-            preparedStmt.setInt    (5, type);
+            preparedStmt.setInt    (5, 0);
             // execute the preparedstatement
             preparedStmt.executeUpdate();
             ResultSet rs = preparedStmt.getGeneratedKeys();
@@ -361,18 +378,11 @@ public class JRDBHelperForWebservice {
             if(rs.next())
             {
                 last_inserted_id = rs.getInt(1);
-                //update title
-                String newtitle = "script-" + last_inserted_id;
-                String query2 = "update tbscript set title = ? where sid = ?";
-                PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
-                preparedStmt2.setString   (1, newtitle);
-                preparedStmt2.setInt      (2, last_inserted_id);
-                preparedStmt2.executeUpdate();
             }
             return last_inserted_id;
         }catch (Exception ex )
         {
-            System.out.println("Error : rdbNewRenderTask exception , " + ex.getMessage() ) ;
+            System.out.println("Error : rdbNewUserScript exception , " + ex.getMessage() ) ;
             return -1 ;
         }
     }
@@ -393,7 +403,7 @@ public class JRDBHelperForWebservice {
                 jscript.uid = rs.getInt("uid");
                 jscript.title = rs.getString("title");
                 jscript.scriptContent = "";
-                jscript.utime = rs.getDate("utime");
+                jscript.utime = rs.getString("utime");
                 jscript.state = rs.getInt("state");
                 jscript.jsfile = rs.getString("jsfile");
 
@@ -414,6 +424,34 @@ public class JRDBHelperForWebservice {
     }
 
 
+    //2022-5-11
+    public ArrayList<JScript> rdbGetUserScriptList(int uid)
+    {
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * "
+                    +" FROM tbscript WHERE uid="  + uid
+                    +" Order by utime DESC LIMIT 50") ;
+            ArrayList<JScript> list =new ArrayList<>() ;
+            while (rs.next()) {
+                JScript jscript = new JScript();
+                jscript.sid = rs.getInt("sid");
+                jscript.uid = rs.getInt("uid");
+                jscript.title = rs.getString("title");
+                jscript.scriptContent = "";
+                jscript.utime = rs.getString("utime");
+                jscript.state = rs.getInt("state");
+                jscript.jsfile = rs.getString("jsfile");
+                list.add(jscript) ;
+            }
+            return list;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return null ;
+        }
+    }
+
+
     //updated 2022-2-5 wf
     public JScript rdbGetUserScript(int sid)
     {
@@ -427,7 +465,7 @@ public class JRDBHelperForWebservice {
                 jscript.uid = rs.getInt("uid");
                 jscript.title = rs.getString("title");
                 jscript.scriptContent ="";
-                jscript.utime = rs.getDate("utime");
+                jscript.utime = rs.getString("utime");
                 jscript.state = rs.getInt("state");
                 jscript.jsfile = rs.getString("jsfile");
                 return jscript;
@@ -452,7 +490,7 @@ public class JRDBHelperForWebservice {
                 jscript.uid = rs.getInt("uid");
                 jscript.title = rs.getString("title");
                 jscript.scriptContent = "";
-                jscript.utime = rs.getDate("utime");
+                jscript.utime = rs.getString("utime");//2022-5-11
                 jscript.state = rs.getInt("state");
                 jscript.jsfile = rs.getString("jsfile") ;
                 return jscript;
@@ -468,13 +506,14 @@ public class JRDBHelperForWebservice {
     {
         try {
             Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT uid,uname,password "
+            ResultSet rs = stmt.executeQuery("SELECT uid,uname,password,img "
                     +" FROM tbuser WHERE uname='"+uname+"' LIMIT 1") ;
             if (rs.next()) {
                 JUser user = new JUser();
                 user.uid = rs.getInt("uid");
                 user.uname = rs.getString("uname");
                 user.password = rs.getString("password") ;
+                user.img = rs.getString("img") ;
                 return user;
             }
             return null;
@@ -484,44 +523,22 @@ public class JRDBHelperForWebservice {
         }
     }
 
-    public void rdbUpdateUserScript( int sid, String script, String title ){
-        if( script != null || title != null )
-        {
-            try
-            {
-                long dt0 = this.getCurrentDatetime();
+    public long rdbUpdateUserScript( int sid,String title ){
 
-                if( script!=null && title != null )
-                {
-                    String query2 = "update tbscript set title = ?, scriptcontent = ? , updatetime = ?  where sid = ?";
-                    PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
-                    preparedStmt2.setString   (1, title);
-                    preparedStmt2.setString   (2, script);
-                    preparedStmt2.setLong     (3, dt0);
-                    preparedStmt2.setInt      (4, sid);
-                    preparedStmt2.executeUpdate();
-                }
-                else if( script!=null )
-                {
-                    String query2 = "update tbscript set scriptcontent = ? , updatetime = ?  where sid = ?";
-                    PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
-                    preparedStmt2.setString   (1, script);
-                    preparedStmt2.setLong     (2, dt0);
-                    preparedStmt2.setInt      (3, sid);
-                    preparedStmt2.executeUpdate();
-                }else
-                {
-                    String query2 = "update tbscript set title = ? , updatetime = ?  where sid = ?";
-                    PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
-                    preparedStmt2.setString   (1, title);
-                    preparedStmt2.setLong     (2, dt0);
-                    preparedStmt2.setInt      (3, sid);
-                    preparedStmt2.executeUpdate();
-                }
-            }catch (Exception ex )
-            {
-                System.out.println("Error : rdbNewRenderTask exception , " + ex.getMessage() ) ;
-            }
+        try
+        {
+            String dt0 = getCurrentDatetimeStr() ;
+            String query2 = "update tbscript set title = ?, utime = ?  where sid = ?";
+            PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
+            preparedStmt2.setString   (1, title);
+            preparedStmt2.setString   (2, dt0);
+            preparedStmt2.setInt      (3, sid);
+            preparedStmt2.executeUpdate();
+            return Timestamp.valueOf( dt0).getTime()/1000 ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbUpdateUserScript exception , " + ex.getMessage() ) ;
+            return 0 ;
         }
     }
 
@@ -829,8 +846,8 @@ public class JRDBHelperForWebservice {
                 styleobj.styleContent =  rspd.getString("styleContent") ;
                 styleobj.description =  rspd.getString("description");
                 styleobj.userid =  rspd.getInt("userid");
-                styleobj.createtime =  rspd.getTime("createtime") ;
-                styleobj.updatetime = rspd.getTime("updatetime");
+                styleobj.createtime =  rspd.getString("createtime") ;
+                styleobj.updatetime = rspd.getString("updatetime");
             }
             return styleobj ;
         }catch(Exception ex){
@@ -1122,19 +1139,49 @@ public class JRDBHelperForWebservice {
     }
 
     //输入hcol，在dataitem表中找到小于等于hcol的最近的值
-    public JProductDataItem rdbGetLowerEqualNearestHCol(int pid,Long hcol,int timeType)
+    //2022-7-8 use dt0 replace hcol
+    public JProductDataItem rdbGetLowerEqualNearestDt0(int pid,Long indt,int timeType)
     {
         try{
             Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
             String sqlstr = String.format("SELECT * FROM tbproductdataitem "
-                            +"WHERE pid=%d AND hcol<=%d Order by hcol DESC LIMIT 1",
-                    pid,hcol ) ;
+                            +"WHERE pid=%d AND dt0<=%d Order by dt0 DESC LIMIT 1",
+                    pid,indt ) ;
             ResultSet rs = stmt.executeQuery(sqlstr );
             if (rs.next()){
                 JProductDataItem di = new JProductDataItem() ;
                 di.fid = rs.getInt("fid");
                 di.pid = rs.getInt("pid") ;
                 di.hcol = rs.getLong("hcol") ;
+                di.dt0 = rs.getLong("dt0") ;
+                di.dt1 = rs.getLong("dt1") ;
+                di.convertShowValRealVal(timeType);
+                return di;
+            }else{
+                return null;
+            }
+        }catch (SQLException ex){
+            return null;
+        }
+    }
+
+    //输入hcol，在dataitem表中找到大于hcol的最近的值 2022-7-3
+    //2022-7-8
+    public JProductDataItem rdbGetGreaterNearestDt0(int pid,Long indt,int timeType)
+    {
+        try{
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            String sqlstr = String.format("SELECT * FROM tbproductdataitem "
+                            +"WHERE pid=%d AND dt0>%d Order by dt0 ASC LIMIT 1",
+                    pid, indt ) ;
+            ResultSet rs = stmt.executeQuery(sqlstr );
+            if (rs.next()){
+                JProductDataItem di = new JProductDataItem() ;
+                di.fid = rs.getInt("fid");
+                di.pid = rs.getInt("pid") ;
+                di.hcol = rs.getLong("hcol") ;
+                di.dt0 = rs.getLong("dt0") ;
+                di.dt1 = rs.getLong("dt1") ;
                 di.convertShowValRealVal(timeType);
                 return di;
             }else{
@@ -1588,8 +1635,8 @@ public class JRDBHelperForWebservice {
                              String resultRelFilePath ) {
         try
         {
-            String query = " insert into tbofftask (mode,uid,orderfile,resultfile,ctime,utime,status,tag,msg)"
-                    + " values (?, ?, ?,   ?, ?, ? ,  ? ,? ,?)";
+            String query = " insert into tbofftask (mode,uid,orderfile,resultfile,ctime,status,tag,msg)"
+                    + " values (?, ?, ?,   ?, ?, ? ,  ? ,? )";
             // create the mysql insert preparedstatement
             PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             preparedStmt.setInt (1, mode );
@@ -1597,10 +1644,10 @@ public class JRDBHelperForWebservice {
             preparedStmt.setString   (3, orderRelFilePath);
             preparedStmt.setString    (4, resultRelFilePath);
             preparedStmt.setString    (5, getCurrentDatetimeStr() );//ctime
-            preparedStmt.setString    (6, getCurrentDatetimeStr() );//utime
-            preparedStmt.setInt    (7, 0 );//
-            preparedStmt.setString    (8, "" );//
-            preparedStmt.setString    (9, "");//
+            //preparedStmt.setString    (6, getCurrentDatetimeStr() );//utime
+            preparedStmt.setInt    (6, 0 );//
+            preparedStmt.setString    (7, "" );//
+            preparedStmt.setString    (8, "");//
             // execute the preparedstatement
             preparedStmt.executeUpdate();
             ResultSet rs = preparedStmt.getGeneratedKeys();
@@ -1622,11 +1669,12 @@ public class JRDBHelperForWebservice {
             //
             int status = 3 ;//0-not start; 1-running; 2-done; 3-failed.
             if(workerRes.state==0) status = 2 ;
-            String query2 = "UPDATE tbofftask SET utime=? , status=? WHERE ofid=?";
+            String query2 = "UPDATE tbofftask SET utime=? , status=? , resultfile=? WHERE ofid=?";
             PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
             preparedStmt2.setString(1 , getCurrentDatetimeStr());
             preparedStmt2.setInt      (2, status);
-            preparedStmt2.setInt      (3, workerRes.ofid);
+            preparedStmt2.setString(3, workerRes.resultRelFilepath);//2022-4-5
+            preparedStmt2.setInt      (4, workerRes.ofid);
             preparedStmt2.executeUpdate();
             return true ;
         }catch (Exception ex )
@@ -2035,5 +2083,359 @@ public class JRDBHelperForWebservice {
             return null ;
         }
     }
+
+
+    /// 2022-4-7
+    public ArrayList<JOfftask> rdbGetOfftaskList(int uid,
+                                                 int ipage,//zero based
+                                                 int pagesize)
+    {
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            int offset = ipage * pagesize ;
+            ResultSet rs = stmt.executeQuery("SELECT * "
+                    +" FROM tbofftask WHERE uid="+uid
+                    +" ORDER BY ofid DESC "
+                    +" LIMIT "+offset + "," + pagesize ) ;
+            ArrayList<JOfftask> retlist = new ArrayList<>() ;
+            while (rs.next()) {
+                JOfftask ot = new JOfftask() ;
+                ot.ofid = rs.getInt(1) ;
+                ot.mode = rs.getInt(2) ;
+                ot.uid = rs.getInt(3) ;
+                ot.orderfile = rs.getString(4) ;
+                ot.resultfile = rs.getString(5) ;
+                ot.ctime = rs.getString(6) ;
+                ot.utime = rs.getString(7) ;
+                ot.status = rs.getInt(8) ;
+                ot.tag = rs.getString(9) ;
+                ot.msg = rs.getString(10) ;
+                retlist.add(ot) ;
+            }
+            return retlist;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return null;
+        }
+    }
+    /// 2022-4-7
+    public int rdbGetOfftaskCountByUid(int uid){
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT count(ofid) "
+                    +" FROM tbofftask WHERE uid="+uid
+                    ) ;
+            int ressult = 0 ;
+            if( rs.next() )
+            {
+                ressult = rs.getInt(1) ;
+            }
+            return ressult;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return -1;
+        }
+    }
+
+    //2022-4-9
+    public JOfftask rdbGetOfftask(int ofid)
+    {
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT * FROM tbofftask WHERE ofid="+String.valueOf(ofid)
+            );
+            if (rs.next()) {
+                JOfftask offtask = new JOfftask();
+                offtask.ofid = rs.getInt(1) ;
+                offtask.mode = rs.getInt(2) ;
+                offtask.uid = rs.getInt(3) ;
+                offtask.orderfile = rs.getString(4) ;
+                offtask.resultfile = rs.getString(5) ;
+                offtask.ctime = rs.getString(6) ;
+                offtask.utime = rs.getString(7) ;
+                offtask.status = rs.getInt(8) ;
+                offtask.tag = rs.getString(9) ;
+                offtask.msg = rs.getString(10) ;
+                return offtask;
+            }else{
+                System.out.println("Error : no recored for "+ ofid);
+                return null ;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return null ;
+        }
+    }
+
+    /// 2022-4-9
+    /// remove product related records in tbproduct,
+    /// tbproductband, tbproductdataitem,
+    /// tbproductdisplay
+    public boolean rdbRemoveProductRecords(int pid) {
+        try
+        {
+            {
+                String query = "delete from tbproduct where pid=?" ;
+                PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query);
+                preparedStmt.setInt      (1, pid);
+                preparedStmt.executeUpdate();
+            }
+            {
+                String query = "delete from tbproductband where pid=?" ;
+                PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query);
+                preparedStmt.setInt      (1, pid);
+                preparedStmt.executeUpdate();
+            }
+            {
+                String query = "delete from tbproductdataitem where pid=?" ;
+                PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query);
+                preparedStmt.setInt      (1, pid);
+                preparedStmt.executeUpdate();
+            }
+            {
+                String query = "delete from tbproductdisplay where pid=?" ;
+                PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query);
+                preparedStmt.setInt      (1, pid);
+                preparedStmt.executeUpdate();
+            }
+
+            return true ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbRemoveProductRecords exception , " + ex.getMessage() ) ;
+            return false ;
+        }
+    }
+
+
+    /// 2022-4-9
+    public boolean rdbRemoveOfftaskRecords(int ofid) {
+        try
+        {
+            {
+                String query = "delete from tbofftask where ofid=?" ;
+                PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query);
+                preparedStmt.setInt      (1, ofid);
+                preparedStmt.executeUpdate();
+            }
+            return true ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbRemoveOfftaskRecords exception , " + ex.getMessage() ) ;
+            return false ;
+        }
+    }
+
+
+
+    /// 2022-4-17
+    public ArrayList<OmcFile> rdbGetOmcFileList(int uid,int type)
+    {
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * "
+                    +" FROM tbomcfiles WHERE uid="+uid
+                    +" AND type=" + type
+                    +" ORDER BY omcid DESC "
+                    +" LIMIT 100 ") ;
+            ArrayList<OmcFile> retlist = new ArrayList<>() ;
+            while (rs.next()) {
+                OmcFile ot = new OmcFile() ;
+                ot.omcid = rs.getInt(1) ;
+                ot.type = rs.getInt(2) ;
+                ot.type2 = rs.getInt(3) ;
+                ot.file = rs.getString(4) ;
+                ot.uid = rs.getInt(5) ;
+                ot.name = rs.getString(6) ;
+                ot.ctime = rs.getString(7) ;
+                retlist.add(ot) ;
+            }
+            return retlist;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return null;
+        }
+    }
+
+    //2022-4-17
+    public int insertNewOmcFile(int type, //1-qgs,2-img,3-vec
+                            int type2,//1-point,2-line,3-polygon
+                            String file,//relfilepath
+                            int uid,
+                            String name
+                            )
+    {
+        try
+        {
+            String ctime = getCurrentDatetimeStr() ;
+            String query = "INSERT INTO `tbomcfiles`(`type`, `type2`, `file`, `uid`, `name`, `ctime` )"
+                    + " VALUES (?, ?,  ?,  ?,   ?,   ?)";
+            // create the mysql insert preparedstatement
+            PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            preparedStmt.setInt (1, type );
+            preparedStmt.setInt (2, type2);
+            preparedStmt.setString   (3, file );
+            preparedStmt.setInt    (4, uid);
+            preparedStmt.setString    (5, name );
+            preparedStmt.setString    (6, ctime );
+            // execute the preparedstatement
+            preparedStmt.executeUpdate();
+            ResultSet rs = preparedStmt.getGeneratedKeys();
+            int last_inserted_id = -1 ;
+            if(rs.next())
+            {
+                last_inserted_id = rs.getInt(1);
+            }
+            return last_inserted_id;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : insertNewOmcFile exception , " + ex.getMessage() ) ;
+            return -1 ;
+        }
+    }
+
+
+    //delete omc file in mysql
+    public boolean deleteOmcFile( int omcid  ){
+        try{
+            String query2 = "DELETE FROM tbomcfiles where omcid = ?";
+            PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
+            preparedStmt2.setInt      (1, omcid);
+            preparedStmt2.executeUpdate();
+            return true ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbDeletePreloadlist exception , " + ex.getMessage() ) ;
+            return false ;
+        }
+    }
+
+    /// 2022-4-17
+    public OmcFile rdbGetOmcFile(int omcid)
+    {
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * "
+                    +" FROM tbomcfiles WHERE omcid="+omcid
+                    ) ;
+            if (rs.next()) {
+                OmcFile ot = new OmcFile() ;
+                ot.omcid = rs.getInt(1) ;
+                ot.type = rs.getInt(2) ;
+                ot.type2 = rs.getInt(3) ;
+                ot.file = rs.getString(4) ;
+                ot.uid = rs.getInt(5) ;
+                ot.name = rs.getString(6) ;
+                ot.ctime = rs.getString(7) ;
+                return ot ;
+            }
+            return null;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return null;
+        }
+    }
+
+
+    //delete user script 2022-5-15
+    public boolean rdbDeleteUserScript( int sid  ){
+        try{
+            //update  DELETE FROM table_name [WHERE Clause]
+            String query2 = "DELETE FROM tbscript where uid>0 AND sid = ?";
+            PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
+            preparedStmt2.setInt      (1, sid);
+            preparedStmt2.executeUpdate();
+            return true ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbDeletePreloadlist exception , " + ex.getMessage() ) ;
+            return false ;
+        }
+    }
+
+
+
+    /// 2022-5-26
+    public ArrayList<JGeneralCategory> rdbGetGeneralCategoryList(int itype,int visible)
+    {
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * "
+                    +" FROM tbcategory WHERE itype="+String.valueOf(itype)
+                    +" AND visible=" + String.valueOf(visible)
+                    +" ORDER BY iorder ASC "
+                    +" LIMIT 100 ") ;
+            ArrayList<JGeneralCategory> retlist = new ArrayList<>() ;
+            while (rs.next()) {
+                JGeneralCategory o1 = new JGeneralCategory() ;
+                o1.catid = rs.getInt(1) ;
+                o1.catname = rs.getString(2) ;
+                o1.visible = rs.getInt(3) ;
+                o1.iorder =rs.getInt(4) ;
+                o1.itype = rs.getInt(5) ;
+                retlist.add(o1) ;
+            }
+            return retlist;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return null;
+        }
+    }
+
+
+    /// 2022-5-26
+    public ArrayList<OmcFile> rdbGetOmcFileListWithType2(int uid,int type,int type2)
+    {
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * "
+                    +" FROM tbomcfiles WHERE uid="+uid
+                    +" AND type=" + type
+                    +" AND type2=" + type2
+                    +" ORDER BY omcid DESC "
+                    +" LIMIT 100 ") ;
+            ArrayList<OmcFile> retlist = new ArrayList<>() ;
+            while (rs.next()) {
+                OmcFile ot = new OmcFile() ;
+                ot.omcid = rs.getInt(1) ;
+                ot.type = rs.getInt(2) ;
+                ot.type2 = rs.getInt(3) ;
+                ot.file = rs.getString(4) ;
+                ot.uid = rs.getInt(5) ;
+                ot.name = rs.getString(6) ;
+                ot.ctime = rs.getString(7) ;
+                retlist.add(ot) ;
+            }
+            return retlist;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return null;
+        }
+    }
+
+    //2022-6-12 update style
+    public boolean rdbUpdateStyle( int styleid,String content,String desc ){
+        try
+        {
+            String dt0 = getCurrentDatetimeStr() ;
+            String query2 = "update tbstyle set  styleContent = ?, description = ?, updatetime = ? " +
+                    " where styleid = ?";
+            PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
+            preparedStmt2.setString   (1, content);
+            preparedStmt2.setString   (2, desc);
+            preparedStmt2.setString      (3, dt0);
+            preparedStmt2.setInt(4 , styleid);
+            preparedStmt2.executeUpdate();
+            return true;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbUpdateStyle exception , " + ex.getMessage() ) ;
+            return false;
+        }
+    }
+
+
+
 
 }

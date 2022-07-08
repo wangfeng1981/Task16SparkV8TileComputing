@@ -7,6 +7,8 @@ package com.pixelengine;
 //update 2022-3-19
 //update 2022-4-3 0800
 //update 2022-6-6 1027 add debug infos output for finding bugs in getDataCollection
+//update 2022-7-3 add getNearestDatetime with return DatetimeDisplay Object.
+//update 2022-7-8 update DatetimeDisplay
 //
 /////////////////////////////////////////////////////////
 
@@ -940,6 +942,50 @@ public class HBasePixelEngineHelper {
             return null ;
         }
 
+    }
+
+    //2022-7-3
+    //2022-7-8
+    public DatetimeDisplay getNearestDatetime(
+            String dsName,
+            long currdt ,
+            int isbefore //1 before or 0 after
+    ) {
+        System.out.println("in java getNearestDatetime " ) ;
+        try{
+            DatetimeDisplay dd = new DatetimeDisplay() ;
+            JRDBHelperForWebservice rdb = new JRDBHelperForWebservice();
+            JProduct pdt = rdb.rdbGetProductInfoByName(dsName) ;
+            if( pdt==null ){
+                throw new Exception("bad dsname '" + dsName +"'") ;
+            }
+            if( isbefore == 1 ){
+                JProductDataItem di = rdb.rdbGetLowerEqualNearestDt0(pdt.pid , currdt , pdt.timeType) ;
+                if( di==null ){
+                    throw new Exception("no datetime before") ;
+                }
+                dd.dt = di.hcol;
+                dd.dt0 = di.dt0 ;
+                dd.dt1 = di.dt1 ;
+                dd.display = di.showVal ;
+            }else{
+                //after
+                JProductDataItem di = rdb.rdbGetGreaterNearestDt0(pdt.pid , currdt , pdt.timeType) ;
+                if( di==null ){
+                    throw new Exception("no datetime after") ;
+                }
+                dd.dt = di.hcol;
+                dd.dt0 = di.dt0 ;
+                dd.dt1 = di.dt1 ;
+                dd.display = di.showVal ;
+            }
+            return dd ;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error : getNearestDatetime exception " + ex.getMessage();
+            return null ;
+        }
     }
 }
 

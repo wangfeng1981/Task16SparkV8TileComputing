@@ -1,5 +1,6 @@
 package com.pixelengine.DataModel;
 //2022-01-01
+//2022-4-6 add img
 
 import java.util.ArrayList;
 
@@ -8,6 +9,7 @@ public class JUser {
     public String uname;
     public String password ;
     public String token ;
+    public String img ;
 
     private static ArrayList<JUser> sharedUserList = new ArrayList<>();
     public static void addToSharedList(JUser user)

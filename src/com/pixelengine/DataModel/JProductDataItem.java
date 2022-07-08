@@ -1,10 +1,11 @@
 package com.pixelengine.DataModel;
 //2021-3
 //2022-01-01
+//2022-7-8
 
 public class JProductDataItem {
     public int fid, pid ;
-    public long hcol ;
+    public long hcol ,dt0,dt1;
     public double left,right,top,bottom ;
     public long createTime , updateTime ;
     public String showVal,realVal ;
@@ -12,8 +13,8 @@ public class JProductDataItem {
     {
         realVal = String.valueOf(hcol) ;
         showVal = realVal ;
-        int ymd = (int)(hcol/1000000L) ;
-        int hms = (int)(hcol%1000000L) ;
+        int ymd = (int)(dt0/1000000L) ;
+        int hms = (int)(dt0%1000000L) ;
         int year = ymd/10000 ;
         int month = (ymd%10000)/100 ;
         int day = ymd%100 ;
