@@ -344,7 +344,10 @@ public class WTileComputing2HBaseProcessor implements Serializable {
         System.out.println("write bands records ok.");
 
         //add dataitem record
-        int dataitemId = rdb.writeProductDataItem(tcHbOrder.mpid_hpid,tcHbOrder.out_hcol,outExtentLeft,
+        int dataitemId = rdb.writeProductDataItem(tcHbOrder.mpid_hpid,tcHbOrder.out_hcol,
+                tcHbOrder.out_hcol,//2022-7-13
+                tcHbOrder.out_hcol+1,//2022-7-13
+                outExtentLeft,
                 outExtentRight,outExtentTop,outExtentBottom) ;
         if( dataitemId<0 ){
             System.out.println("failed to write data item into mysql.");

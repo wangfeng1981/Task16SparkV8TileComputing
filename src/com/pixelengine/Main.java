@@ -88,6 +88,7 @@ public class Main {
         System.out.println("v2.1.5.0 debug infos") ;
         System.out.println("v2.1.5.1 update some java files from task17. 2022-7-3") ;
         System.out.println("v2.1.5.2 update some java files from task17 for nearest datetimeobj. 2022-7-8") ;
+        System.out.println("v2.1.6.0 write dataitem with dt0 dt1. 2022-7-13");
         System.out.println("usage:");
         System.out.println("spark-submit --master spark://xxx:7077 Task16SparkV8TileComputingToHbase.jar ");
         System.out.println("    task17config.json ");

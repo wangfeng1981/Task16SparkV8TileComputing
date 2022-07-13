@@ -23,6 +23,7 @@ package com.pixelengine;
 //2022-6-12 updateStyle
 //2022-7-3 rdbGetGreaterNearestHCol
 //2022-7-8 dateitem add dt0 dt1
+//2022-7-13 writeProductDataItem with dt0 dt1
 /////////////////////////////////////////////////////////
 
 
@@ -1743,32 +1744,40 @@ public class JRDBHelperForWebservice {
 
 
     /** 2022-3-24
+     * 2022-7-13
      * 写入一条产品记录
      * @param mypid
      * @param hcol
+     * @param dt0
+     * @param dt1
      * @param left
      * @param right
      * @param top
      * @param bottom
      * @return
      */
-    public int writeProductDataItem(int mypid,long hcol,double left,double right,double top,double bottom)
+    public int writeProductDataItem(int mypid,long hcol,
+                                    long dt0,
+                                    long dt1,
+                                    double left,double right,double top,double bottom)
     {
         try
         {
             //INSERT INTO `tbproductdataitem`(`fid`, `pid`, `hcol`, `hleft`, `hright`, `htop`, `hbottom`, `createtime`, `updatetime`) VALUES ('[value-1]','[value-2]','[value-3]','[value-4]','[value-5]','[value-6]','[value-7]','[value-8]','[value-9]')
-            String query = "INSERT INTO `tbproductdataitem`(`pid`, `hcol`, `hleft`, `hright`, `htop`, `hbottom`, `createtime`, `updatetime`)"
-                    + " VALUES (?, ?,  ?,?,?,?,   ?,?)";
+            String query = "INSERT INTO `tbproductdataitem`(`pid`, `hcol`, `dt0`, `dt1`, `hleft`, `hright`, `htop`, `hbottom`, `createtime`, `updatetime`)"
+                    + " VALUES (?, ?,?,?,  ?,?,?,?,   ?,?)";
             // create the mysql insert preparedstatement
             PreparedStatement preparedStmt = JRDBHelperForWebservice.getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             preparedStmt.setInt (1, mypid );
             preparedStmt.setLong (2, hcol);
-            preparedStmt.setDouble   (3, left);
-            preparedStmt.setDouble    (4, right);
-            preparedStmt.setDouble    (5, top );
-            preparedStmt.setDouble    (6, bottom );
-            preparedStmt.setString    (7, getCurrentDatetimeStr() );//
-            preparedStmt.setString    (8, getCurrentDatetimeStr());//
+            preparedStmt.setLong (3, dt0);//2022-7-13
+            preparedStmt.setLong (4, dt1);//2022-7-13
+            preparedStmt.setDouble   (5, left);
+            preparedStmt.setDouble    (6, right);
+            preparedStmt.setDouble    (7, top );
+            preparedStmt.setDouble    (8, bottom );
+            preparedStmt.setString    (9, getCurrentDatetimeStr() );//
+            preparedStmt.setString    (10, getCurrentDatetimeStr());//
             // execute the preparedstatement
             preparedStmt.executeUpdate();
             ResultSet rs = preparedStmt.getGeneratedKeys();
