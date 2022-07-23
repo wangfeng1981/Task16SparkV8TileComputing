@@ -2,6 +2,8 @@ package com.pixelengine.tools;
 //2022-2-6
 //2022-5-11
 //2022-5-15
+//2022-7-17
+
 
 import com.pixelengine.JRDBHelperForWebservice;
 import com.pixelengine.DataModel.JScript;
@@ -41,6 +43,10 @@ public class ScriptsGetterTool {
         // not in buffer or utime is not ok.
         JRDBHelperForWebservice rdb = new JRDBHelperForWebservice();
         JScript scriptObj = rdb.rdbGetScript(sid) ;
+        //2022-7-17
+        if( scriptObj==null ){
+            return null ;
+        }
         String jsfile = WConfig.getSharedInstance().pedir + scriptObj.jsfile ;
         try{
             SciptContent sc = new SciptContent();
