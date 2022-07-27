@@ -9,6 +9,7 @@ package com.pixelengine;
 //update 2022-6-6 1027 add debug infos output for finding bugs in getDataCollection
 //update 2022-7-3 add getNearestDatetime with return DatetimeDisplay Object.
 //update 2022-7-8 update DatetimeDisplay
+//2022-7-27
 //
 /////////////////////////////////////////////////////////
 
@@ -76,16 +77,11 @@ public class HBasePixelEngineHelper {
         tiledata.y = y ;
         tiledata.z = z ;
 
-        boolean useFilekey = false;
         if( dsName.length() == 0 )
         {
             errorMessage="Error : dsName is empty" ;
             System.out.println("debug " + errorMessage);//2022-6-6
             return null;
-        }
-
-        if( dsName.getBytes()[0] == '/'){
-            useFilekey = true;
         }
 
         //get product by name
@@ -113,121 +109,81 @@ public class HBasePixelEngineHelper {
                 }
             }
         }
-        if( useFilekey==false ){
-            //this is Dataset
-            try {
-                tiledata.width = pdt.tileWid;
-                tiledata.height = pdt.tileHei ;
-                tiledata.nband = usebandlist.size() ;//
-                tiledata.dataType = pdt.dataType ;
-                int pixelLen = JProduct.getDataByteLenByDataType( pdt.dataType) ;
-                System.out.println("dataType:" + tiledata.dataType + "; pixelLen:"+pixelLen);
-                tiledata.tiledataArray[0] = new byte[
-                        tiledata.width
-                                *tiledata.height
-                                *tiledata.nband
-                                *pixelLen]  ;
-                int bandbytesize = tiledata.width*tiledata.height * pixelLen ;
-                int lasthpid = -1;
-                byte[] lastCellData = null ;
-                for(int iband = 0 ; iband < usebandlist.size() ; ++ iband )
-                {
-                    int newhpid = usebandlist.get(iband).hPid ;
-                    if( newhpid == lasthpid && lastCellData!=null ){
-                        copyBytes2Bytes(lastCellData, usebandlist.get(iband).bsqIndex ,
-                                bandbytesize , tiledata.tiledataArray[0], iband );
-                    }else{
-                        //2021-8-22
-                        if( pdt.source.equals("hbase") )
-                        {
-                            lastCellData = hbaseGetCellData(
-                                    pdt.hbaseTable.hTableName,
-                                    pdt.hbaseTable.hFamily,
-                                    dt,
-                                    pdt.hbaseTable.hPidByteNum,
-                                    newhpid,
-                                    pdt.hbaseTable.hYXByteNum ,
-                                    z,y,x) ;
-                        }else if( pdt.source.equals("file") )
-                        {
-                            lastCellData = filesystemGetCellData(
-                                    pdt.hbaseTable.hTableName,dt,newhpid,z,y,x) ;
-
-                        }else{
-                            errorMessage = "Error : pdt.source is not supported for '" + pdt.source+"'. " ;
-                            System.out.println("debug " + errorMessage);//2022-6-6
-                            return null ;
-                        }
 
 
-                        if( lastCellData==null ){
-                            errorMessage = "get emtpty cell data.";
-                            System.out.println("debug " + errorMessage);//2022-6-6
-                            return null ;
-                        }
-                        lasthpid = newhpid ;
-                        copyBytes2Bytes(lastCellData, usebandlist.get(iband).bsqIndex ,
-                                bandbytesize , tiledata.tiledataArray[0], iband );
-                    }
-
-                }
-                return tiledata;
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                errorMessage = "Error : getTileData exception of " + e.getMessage() ;
-                System.out.println("debug " + errorMessage);//2022-6-6
-                return null ;
-            }
-        }else{
-            //user file only for hbase
-            //use filekey or filepath
-            try {
-                //get the hcol value in dataItem
+        try {
+            if( dt==0L ){//pe.Datafile
                 ArrayList<JProductDataItem> dataItems = rdb.rdbGetProductDataItemList(
                         pdt.pid,0,1,"ASC") ;
-                //for user's file , this is the only one dataitem, only for hcol.
                 if( dataItems==null || dataItems.size()==0 ){
-                    System.out.println("no dataitem for user file:"+ pdt.name);
+                    System.out.println("no dataitem for dsname:"+ pdt.name);
                     return null ;
                 }
-                JProductDataItem onlyDataItem = dataItems.get(0) ;
-
-                tiledata.width = pdt.tileWid;
-                tiledata.height = pdt.tileHei ;
-                tiledata.nband = pdt.bandList.size();//different with dataset
-                tiledata.dataType = pdt.dataType;
-                int pixelLen = pdt.getDataByteLen() ;
-                System.out.println("dataType:" + tiledata.dataType + ";; pixelLen:"+pixelLen);
-                tiledata.tiledataArray[0] = new byte[
-                        tiledata.width
-                                *tiledata.height
-                                *tiledata.nband
-                                *pixelLen] ;
-                byte[] lastCellData = hbaseGetCellData(
-                        pdt.hbaseTable.hTableName,
-                        pdt.hbaseTable.hFamily,
-                        onlyDataItem.hcol ,//different with dataset
-                        pdt.hbaseTable.hPidByteNum,
-                        pdt.bandList.get(0).hPid ,
-                        pdt.hbaseTable.hYXByteNum ,
-                        z,y,x) ;
-                if( lastCellData==null ){
-                    errorMessage = "get emtpty cell data hcol:" + onlyDataItem.hcol;
-                    System.out.println("debug " + errorMessage);//2022-6-6
-                    return null ;
-                }
-                System.arraycopy(lastCellData, 0 ,
-                        tiledata.tiledataArray[0] , 0 ,
-                        lastCellData.length);//full copy
-
-                return tiledata;
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                errorMessage = "Error : getTileData exception of " + e.getMessage() ;
-                System.out.println("debug " + errorMessage);//2022-6-6
-                return null ;
+                dt = dataItems.get(0).hcol ;
             }
+            tiledata.width = pdt.tileWid;
+            tiledata.height = pdt.tileHei ;
+            tiledata.nband = usebandlist.size() ;//
+            tiledata.dataType = pdt.dataType ;
+            int pixelLen = JProduct.getDataByteLenByDataType( pdt.dataType) ;
+            System.out.println("dataType:" + tiledata.dataType + "; pixelLen:"+pixelLen);
+            tiledata.tiledataArray[0] = new byte[
+                    tiledata.width
+                            *tiledata.height
+                            *tiledata.nband
+                            *pixelLen]  ;
+            int bandbytesize = tiledata.width*tiledata.height * pixelLen ;
+            int lasthpid = -1;
+            byte[] lastCellData = null ;
+            for(int iband = 0 ; iband < usebandlist.size() ; ++ iband )
+            {
+                int newhpid = usebandlist.get(iband).hPid ;
+                if( newhpid == lasthpid && lastCellData!=null ){
+                    copyBytes2Bytes(lastCellData, usebandlist.get(iband).bsqIndex ,
+                            bandbytesize , tiledata.tiledataArray[0], iband );
+                }else{
+                    //2021-8-22
+                    if( pdt.source.equals("hbase") )
+                    {
+                        lastCellData = hbaseGetCellData(
+                                pdt.hbaseTable.hTableName,
+                                pdt.hbaseTable.hFamily,
+                                dt,
+                                pdt.hbaseTable.hPidByteNum,
+                                newhpid,
+                                pdt.hbaseTable.hYXByteNum ,
+                                z,y,x) ;
+                    }else if( pdt.source.equals("file") )
+                    {
+                        lastCellData = filesystemGetCellData(
+                                pdt.hbaseTable.hTableName,dt,newhpid,z,y,x) ;
+
+                    }else{
+                        errorMessage = "Error : pdt.source is not supported for '" + pdt.source+"'. " ;
+                        System.out.println("debug " + errorMessage);//2022-6-6
+                        return null ;
+                    }
+
+
+                    if( lastCellData==null ){
+                        errorMessage = "get emtpty cell data.";
+                        System.out.println("debug " + errorMessage);//2022-6-6
+                        return null ;
+                    }
+                    lasthpid = newhpid ;
+                    copyBytes2Bytes(lastCellData, usebandlist.get(iband).bsqIndex ,
+                            bandbytesize , tiledata.tiledataArray[0], iband );
+                }
+
+            }
+            return tiledata;
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            errorMessage = "Error : getTileData exception of " + e.getMessage() ;
+            System.out.println("debug " + errorMessage);//2022-6-6
+            return null ;
         }
+
     }
 
 

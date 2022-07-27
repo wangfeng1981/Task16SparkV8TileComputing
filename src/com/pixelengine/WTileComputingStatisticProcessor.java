@@ -93,10 +93,8 @@ public class WTileComputingStatisticProcessor implements Serializable {
         String scriptText = "" ;
         int targetLevel = 0 ;
         if( order.dsname.compareTo("") != 0 ){
-            scriptText = "function main(){return pe.Dataset('"
-                    + order.dsname
-                    +"',"
-                    + order.dt +");}" ;
+            scriptText =
+                    JSharedScriptTemplates.scriptTemplate_name.replace("{{{name}}}",order.dsname);
             JProduct productInfo = rdb.rdbGetProductInfoByName(order.dsname) ;
             if( productInfo==null ){
                 writeResultJson(19,null,"not find product of "+ order.dsname);
