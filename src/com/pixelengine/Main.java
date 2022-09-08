@@ -91,6 +91,13 @@ public class Main {
         System.out.println("v2.1.6.0 write dataitem with dt0 dt1. 2022-7-13");
         System.out.println("v2.1.6.1 update java files from task17. 2022-7-17");
         System.out.println("v2.1.7.1 update pe product script. 2022-7-27");
+        System.out.println("v2.2.0.0 add General Spark V8 Computing 2022-9-2.");//this give up.
+        //v2.2.0.0 尝试做一个通用的MapReduce流程，但是太难了，放弃。
+
+        //v2.3.x
+        //1.增加脚本序列分析
+        //2.序列分析结果排序
+        System.out.println("v2.3.1.0 add serial compute for script product. 2022-9-4");
         System.out.println("usage:");
         System.out.println("spark-submit --master spark://xxx:7077 Task16SparkV8TileComputingToHbase.jar ");
         System.out.println("    task17config.json ");
@@ -99,8 +106,8 @@ public class Main {
         System.out.println("    output.json ");
         System.out.println("--------------------------");
         System.out.println("tasktype: jshbase 瓦片计算到HBase, stat 区域统计, serial 序列分析");
+        System.out.println("tasktype: sserial 脚本产品序列分析.");
         System.out.println("--------------------------");
-
 
         if( args.length != 4 ){
             System.out.println("Error : args.length!=4, out.") ;
@@ -142,6 +149,15 @@ public class Main {
                 int state = proc.runit() ;
                 System.exit(state);
             }
+            else if( tasktype.compareTo("sserial")==0 )
+            {
+                WTileComputingScriptSerialProcessor proc = new WTileComputingScriptSerialProcessor() ;
+                proc.orderJsonFile = inputOrderfile ;
+                proc.task17configFile = task17configfile ;
+                proc.resultJsonFile = outputJsonFilename ;
+                int state = proc.runit() ;
+                System.exit(state);
+            }
             else{
                 System.out.println("unsupported task type:"+ tasktype);
                 System.exit(3);
@@ -151,7 +167,6 @@ public class Main {
             System.out.println("runApp exception:"+ ex.getMessage());
             System.exit(2);  // Signifying that there is an error
         }
-
     }
 }
 

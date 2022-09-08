@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class WTileComputingSerialProcessor implements Serializable {
@@ -31,17 +32,17 @@ public class WTileComputingSerialProcessor implements Serializable {
     public String orderJsonFile ;
     public String resultJsonFile ;
 
-    protected boolean writeResultJson(int state, JDtStatisticData[] statdatas, String msg)
+    static public boolean writeResultJson(String outJsonfile,
+                                          int state, JDtStatisticData[] statdatas, String msg)
     {
-        if (resultJsonFile.isEmpty()) {
-            System.out.println("resultJsonFile is empty.");
+        if (outJsonfile.isEmpty()) {
+            System.out.println("outJsonfile is empty.");
             return false ;
         } else {
             try {
                 Gson gson = new Gson() ;
                 String datastr = gson.toJson(statdatas , JDtStatisticData[].class) ;
-
-                OutputStream outputStream = new FileOutputStream(resultJsonFile);
+                OutputStream outputStream = new FileOutputStream(outJsonfile);
                 String content = "{\"state\":" + String.valueOf(state)
                         + ",\"data\":" + datastr
                         + ",\"message\":\"" + msg + "\"}";
@@ -49,20 +50,19 @@ public class WTileComputingSerialProcessor implements Serializable {
                 outputStream.close();
                 return true ;
             } catch (Exception ex) {
-                System.out.println("WTileComputingSerialProcessor.writeResultJson exception:" + ex.getMessage());
+                System.out.println("writeResultJson exception:" + ex.getMessage());
                 return false ;
             }
         }
     }
 
-    protected boolean writeResultCsv(JDtStatisticData[] statdatas)
+    static public boolean writeResultCsv(String csvfile, JDtStatisticData[] statdatas)
     {
-        if (resultJsonFile.isEmpty()) {
-            System.out.println("resultJsonFile is empty.");
+        if (csvfile.isEmpty()) {
+            System.out.println("csvfile is empty.");
             return false ;
         } else {
             try {
-                String csvfile = resultJsonFile + ".csv" ;
                 FileWriter writer = new FileWriter(csvfile) ;
                 writer.write("key,areakm2,acnt,fcnt,vcnt,vmin,vmax,sum,sqsum,mean,stddev,...\n") ;
                 for(int idt=0;idt < statdatas.length; ++ idt )
@@ -88,16 +88,13 @@ public class WTileComputingSerialProcessor implements Serializable {
                 writer.close();
                 return true ;
             } catch (Exception ex) {
-                System.out.println("WTileComputingSerialProcessor.writeResultCsv exception:" + ex.getMessage());
+                System.out.println("writeResultCsv exception:" + ex.getMessage());
                 return false ;
             }
         }
     }
 
-    public class SparkTaskParams implements Serializable  {
-        public int z,y,x ;
-        long[] dtCollection;
-    }
+
 
     public int runit()
     {
@@ -161,7 +158,7 @@ public class WTileComputingSerialProcessor implements Serializable {
                     ) ;
             if( dtcollectionArray==null || dtcollectionArray.length==0 )
             {
-                writeResultJson(30 , null , "dtcollectionArray is null or empty") ;
+                writeResultJson( resultJsonFile, 30 , null , "dtcollectionArray is null or empty") ;
                 return 30 ;
             }
 
@@ -169,14 +166,14 @@ public class WTileComputingSerialProcessor implements Serializable {
             JProduct productInfo = rdb.rdbGetProductInfoByName( order.dsname ) ;
             if( productInfo==null )
             {
-                writeResultJson(31 , null , "no product for '" + order.dsname  + "'") ;
+                writeResultJson(resultJsonFile,31 , null , "no product for '" + order.dsname  + "'") ;
                 return 31 ;
             }
 
             //通过roi计算经纬度范围 extent
             byte[] orderRoi2TlvData = JRoi2Loader.loadData(order.roi) ;//
             if( orderRoi2TlvData==null ){
-                writeResultJson(32,null,"bad roi:'" + order.roi +"'" );
+                writeResultJson(resultJsonFile,32,null,"bad roi:'" + order.roi +"'" );
                 return 32 ;
             }
             String[] roiarr = new String[1] ;
@@ -253,7 +250,7 @@ public class WTileComputingSerialProcessor implements Serializable {
             }else if( order.method.equals("sum") ){
                 compositeMethod = 4 ;
             }else{
-                writeResultJson(33,null,"unsupported method:'" + order.method +"'" );
+                writeResultJson(resultJsonFile,33,null,"unsupported method:'" + order.method +"'" );
                 return 33 ;
             }
 
@@ -402,10 +399,14 @@ public class WTileComputingSerialProcessor implements Serializable {
                 dtstatDataArray[idt].data = serialStatResults.get(idt)._2 ;
             }
 
+            //sorting by key
+            Arrays.sort( dtstatDataArray) ;
+
             System.out.println("write out json ");
-            writeResultJson(0 , dtstatDataArray , "success" ) ;
+            writeResultJson(resultJsonFile,0 , dtstatDataArray , "success" ) ;
             System.out.println("write csv ");
-            writeResultCsv( dtstatDataArray ) ;
+            String csvfile = resultJsonFile+".csv";
+            writeResultCsv(csvfile, dtstatDataArray ) ;
             System.out.println("*\n*\n*") ;
             System.out.println("good tc:" + accGoodTc.value()) ;
             System.out.println("bad tc:"+accBadTc.value());
@@ -416,10 +417,10 @@ public class WTileComputingSerialProcessor implements Serializable {
 
         }else if( order.jsfile.compareTo("")!=0 ) {
             //目前看仅仅通过脚本没法计算出序列值，以后有时间在完善 2022-4-4
-            writeResultJson(40,null,"no support jsfile mode yet 2022-4-4." );
+            writeResultJson(resultJsonFile,40,null,"no support jsfile mode yet 2022-4-4." );
             return 40 ;
         }else{
-            writeResultJson(11, null , "both dsname or jsfile is empty.") ;
+            writeResultJson(resultJsonFile,11, null , "both dsname or jsfile is empty.") ;
             return 11 ;
         }
     }

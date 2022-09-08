@@ -6,7 +6,12 @@ package com.pixelengine.DataModel;
 
 import com.pixelengine.JStatisticData;
 
-public class JDtStatisticData {
+public class JDtStatisticData implements Comparable<JDtStatisticData>{
     public String key;
     public JStatisticData[] data ;
+
+    @Override
+    public int compareTo(JDtStatisticData o) {
+        return this.key.compareTo(o.key);
+    }
 }

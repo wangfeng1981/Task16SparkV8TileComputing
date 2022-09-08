@@ -34,6 +34,9 @@ public class HBasePeHelperCppConnector {
 
     public native TileComputeResult RunScriptForTileWithoutRenderWithExtra(String javaHelperClassName, String script, String extraJsonText , int z , int y , int x) ;
     public native TileComputeResult RunScriptForTileWithRenderWithExtra(String javaHelperClassName,String script,String styleJson,String extraJsonText ,int z,int y,int x) ;
+    //2022-9-8
+    public native TileComputeResult RunScriptFunctionForTileResult(
+            String javaHelperClassName,String script,String caller,int z,int y,int x) ;
 
     //2022-3-22
     public native TileComputeResultWithRunAfterInfo RunScriptForTileWithoutRenderWithExtraWithRunAfterInfo(

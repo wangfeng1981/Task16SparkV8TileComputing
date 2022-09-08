@@ -131,7 +131,7 @@ public class WTileComputingStatisticProcessor implements Serializable {
                     targetLevel = pinfo.maxZoom ;
                 }else
                 {
-                    if( projStr!=pinfo.proj){
+                    if( projStr.equals(pinfo.proj) ==false ){ //bugfixed 2022-9-8
                         writeResultJson(22, null,
                                 "bad proj0 "+projStr + " and proj1 "+pinfo.proj);
                         return 22;

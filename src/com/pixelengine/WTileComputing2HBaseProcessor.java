@@ -141,7 +141,7 @@ public class WTileComputing2HBaseProcessor implements Serializable {
                 maxZoom = pinfo.maxZoom ;
             }else
             {
-                if( projStr!=pinfo.proj){
+                if( projStr.equals( pinfo.proj) ==false ){
                     writeResultJson(22, 0,"bad proj0 "+projStr + " and proj1 "+pinfo.proj);
                     return 22;
                 }
