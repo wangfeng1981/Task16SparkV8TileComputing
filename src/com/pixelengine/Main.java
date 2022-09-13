@@ -97,7 +97,10 @@ public class Main {
         //v2.3.x
         //1.增加脚本序列分析
         //2.序列分析结果排序
-        System.out.println("v2.3.1.0 add serial compute for script product. 2022-9-4");
+        //3.update java files.
+        System.out.println("v2.3.3.0d add serial compute for script product. 2022-9-9");
+
+
         System.out.println("usage:");
         System.out.println("spark-submit --master spark://xxx:7077 Task16SparkV8TileComputingToHbase.jar ");
         System.out.println("    task17config.json ");

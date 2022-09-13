@@ -27,6 +27,8 @@ package com.pixelengine;
 //2022-7-31
 //2022-8-5
 //2022-8-10
+//2022-9-8 add gots
+//2022-9-13 update offtask running state
 /////////////////////////////////////////////////////////
 
 
@@ -1049,6 +1051,29 @@ public class JRDBHelperForWebservice {
         }
     }
 
+    //2022-9-8
+    //获取一个productDisplay 的产品GOTS命令脚本
+    public ArrayList<JMeta> rdbGetProductDisplayGotsMetas(int displayid)   {
+        try{
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ArrayList<JMeta> metas = new ArrayList<>();
+            ResultSet rspd = stmt.executeQuery("SELECT * FROM tbmeta WHERE metakey='PD_GOTS' AND theid="+displayid);
+            while (rspd.next()) {
+                JMeta meta1 = new JMeta() ;
+                meta1.pk = rspd.getInt(1) ;
+                meta1.theid = rspd.getInt(2) ;
+                meta1.metakey = rspd.getString(3) ;
+                meta1.metavali = rspd.getInt(4) ;
+                meta1.metavalstr = rspd.getString(5) ;
+                metas.add(meta1) ;
+            }
+            return metas ;
+        }catch(Exception ex){
+            System.out.println("rdbGetProductDisplayGotsMetas exception:"+ex.getMessage());
+            return null ;
+        }
+    }
+
 
     //2021-3-23 显示全部系统产品，不包括用户产品
     public ArrayList<JProduct> rdbGetProducts() throws SQLException {
@@ -1869,6 +1894,23 @@ public class JRDBHelperForWebservice {
         }catch (Exception ex )
         {
             System.out.println("Error : updateOfftaskByWorkerResult exception , " + ex.getMessage() ) ;
+            return false ;
+        }
+    }
+
+    //2022-9-13 0-not start; 1-running; 2-done; 3-failed.
+    public boolean updateOfftaskState ( int ofid, int status){
+        try{
+            String query2 = "UPDATE tbofftask SET utime=? , status=? WHERE ofid=?";
+            PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
+            preparedStmt2.setString(1 , getCurrentDatetimeStr());
+            preparedStmt2.setInt      (2, status);
+            preparedStmt2.setInt      (3, ofid);
+            preparedStmt2.executeUpdate();
+            return true ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : updateOfftaskState exception , " + ex.getMessage() ) ;
             return false ;
         }
     }

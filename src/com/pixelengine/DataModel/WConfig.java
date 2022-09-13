@@ -5,7 +5,9 @@ package com.pixelengine.DataModel;
 //update 2022-3-5 2121
 //update 2022-3-18 0930 add initWithInStream method
 //update 2022-3-23 1647 add initWithString method
-
+//update 2022-4-5 offtask_producer_for_cppspark
+//update 2022-4-5 1618 offtask_cppspark_order_recv_socket
+//2022-9-9
 
 import com.google.gson.Gson;
 
@@ -70,28 +72,45 @@ public class WConfig {
     }
 
 
-    public String zookeeper,sparkmaster;
-    public String connstr,user,pwd;//mysql
-    public String hbaseuserfiletable;
-    public String productwmts ;
-    public String host , port ;//task17
-    public String pedir ;//nginx-pedir
-    public String userhtable, userhfami ;
-    public int    userhpidblen , useryxblen ;
-    public String tilelocalrootdir ;//本地瓦片数据根目录
-
-    //2022-2-6
-    public String scriptwmts ;
-
-    //2022-2-13 1854
+    public String binaryfile2hbase;
+    public String connstr;
     public String gdaltranslate;
     public String gdalwarp ;
+    public String hbaseuserfiletable;
+    public String host ;
 
-    //2022-2-13 2116
-    public String offtask_result_collector ;
-    public String offtask_export_producer ;
+    public String offtask_cppspark_0mq_service;
+    public String offtask_cppspark_order_recv_socket ;//task17 离线spark瓦片计算命令外发 0mq-socket "tcp://127.0.0.1:5520"
+    public String offtask_export_0mq_service ;
+    public String offtask_export_producer ;//task17 数据导出命令外发 0mq-socket "tcp://127.0.0.1:5510" ,
+    public String offtask_pe_gots_worker ;//thsi program will be called by
+    public String offtask_result_collector ;//全部离线任务结果收集器 0mq-socket "tcp://127.0.0.1:5500" ,
+    public String offtask_sparkv8tilecompute_jar;
 
-    //2022-3-5 2121 ROI geojson和shp文件转换成hseg.tlv格式数据，然后写入HBase
+    public String omc_localhost_api  ;//http://localhost:15911/
+    public String omc_port; // "15911",
+    public String omc_resdir ;// "/var/www/html/pe/omc_res/" ,
+    public String omc_service ;// pe_mapcomposer_service ,
+    public String omc_zmqport ;// "15922" ,
+
+    public String pedir ;//nginx-pedir /var/www/html/pe/
+    public String http_pedir;//http://192.168.56.103:15980/
+    public String port ;//task17 "15900"
+    public String productwmts ; //productwmts-template.xml
+    public String pwd;//mysql pwd
+    public String scriptwmts ; //scriptwmts-template.xml
     public String shpgeojson2hsegtlv ;
+    public String sparkmaster;     //spark://localhost:7077
+    public String sparksubmit;     // /usr/local/spark/bin/spark-submit
+    public String task17_api_root ;//"http://192.168.56.103:15900/pe/",
+    public String tilelocalrootdir ;//本地瓦片数据根目录 will deprecated
+
+    public String user;// mysql username
+    public String userhfami ; //tiles fixed
+    public String userhtable; //sparkv8out
+    public int userhpidblen ; //4
+    public int useryxblen ;   //4
+
+    public String zookeeper;
 
 }

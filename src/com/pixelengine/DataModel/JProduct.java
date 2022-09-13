@@ -2,6 +2,7 @@ package com.pixelengine.DataModel;
 //2021-3
 //2022-01-01
 //2022-8-3 displayid
+//2022-9-8 gots
 import com.pixelengine.JRDBHelperForWebservice;
 
 import java.sql.SQLException;
@@ -20,6 +21,7 @@ public class JProduct {
     public int styleid , userid ;
     public String source;//hbase or file or sqlite(not use)
     public String[] caps ;//not in use
+    public ArrayList<JMeta> gots = new ArrayList<>();
     /*
     区域统计	zs
     序列分析	xl

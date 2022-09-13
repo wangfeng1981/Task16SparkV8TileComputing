@@ -12,6 +12,7 @@ package com.pixelengine;
 //update 2022-4-4 这个类名称已经写在C++程序里了，所以这里这个参数没啥用 com/pixelengine/HBasePixelEngineHelper
 //update 2022-4-17
 //update 2022-7-17
+//2022-9-9
 /////////////////////////////////////////////////////////
 
 //Java离线计算与C++接口。
@@ -36,6 +37,9 @@ public class HBasePeHelperCppConnector {
     public native TileComputeResult RunScriptForTileWithRenderWithExtra(String javaHelperClassName,String script,String styleJson,String extraJsonText ,int z,int y,int x) ;
     //2022-9-8
     public native TileComputeResult RunScriptFunctionForTileResult(
+            String javaHelperClassName,String script,String caller,int z,int y,int x) ;
+    //2022-9-9
+    public native String RunScriptFunctionForTextResultOrNothing(
             String javaHelperClassName,String script,String caller,int z,int y,int x) ;
 
     //2022-3-22
