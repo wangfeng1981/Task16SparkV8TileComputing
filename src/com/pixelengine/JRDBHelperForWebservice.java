@@ -29,6 +29,10 @@ package com.pixelengine;
 //2022-8-10
 //2022-9-8 add gots
 //2022-9-13 update offtask running state
+//2022-9-14 remove dto
+//2022-9-14 1244
+//2022-9-15
+//2022-9-25
 /////////////////////////////////////////////////////////
 
 
@@ -1504,6 +1508,26 @@ public class JRDBHelperForWebservice {
 
     }
 
+    //modify dsname 2022-9-14
+    public boolean updateProductName( int pid,String newName) {
+        try
+        {
+            //UPDATE `rsbig`.`tbproduct` SET `name` = 'user/1/53' WHERE (`pid` = '53');
+            String query = "update tbproduct set `name`='"+newName+"' where pid="+String.valueOf(pid) ;
+            // create the mysql insert preparedstatement
+            PreparedStatement preparedStmt =
+                    JRDBHelperForWebservice.getConnection().prepareStatement(query);
+            // execute the preparedstatement
+            preparedStmt.executeUpdate();
+            return true;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : updateProductName exception , " + ex.getMessage() ) ;
+            return false ;
+        }
+
+    }
+
     //获取用户预加载产品dpid列表，如果没有用户记录返回系统记录，如果有多条记录返回最新一条 2021-5-29
     public JPreloadMapsData rdbGetPreloadMapsDisplayId( int uid){
         JPreloadMapsData outdata = new JPreloadMapsData() ;
@@ -1789,6 +1813,30 @@ public class JRDBHelperForWebservice {
         }catch (Exception ex )
         {
             System.out.println("Error : rdbGetUserRoiItem exception , " + ex.getMessage() ) ;
+            return null ;
+        }
+    }
+
+    //get system roi 2022-9-15
+    public JRoi2 rdbGetSysRoiItem( int rid) {
+        try{
+            //
+            String query2 = "SELECT * FROM tbroisys WHERE rid=" + String.valueOf(rid)  ;
+            Statement stmt2 = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt2.executeQuery(query2 );
+            if (rs.next()) {
+                JRoi2 roi2 = new JRoi2();
+                roi2.rid = rs.getInt(1) ;
+                roi2.rcid = rs.getInt(2);
+                roi2.name = rs.getString(3);
+                roi2.name2 = rs.getString(4);
+                roi2.geojson = rs.getString(5) ;
+                return roi2 ;
+            }
+            return null ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbGetSysRoiItem exception , " + ex.getMessage() ) ;
             return null ;
         }
     }
@@ -2674,6 +2722,86 @@ public class JRDBHelperForWebservice {
         }
     }
 
+    //2022-9-14 new Style
+    public JStyleDbObject rdbNewStyle( int userid,String content,String desc ){
+        try
+        {
+            String dt0 = getCurrentDatetimeStr() ;
+            String query2 = "insert into tbstyle(styleContent,userid,description,createtime,updatetime) values(?,?,?,?,? )";
+            PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
+            preparedStmt2.setString   (1, content);
+            preparedStmt2.setInt(2,userid);
+            preparedStmt2.setString   (3, desc);
+            preparedStmt2.setString      (4, dt0);
+            preparedStmt2.setString(5 , dt0);
+            preparedStmt2.executeUpdate();
+            ResultSet rs = preparedStmt2.getGeneratedKeys();
+            int last_inserted_id = -1 ;
+            if(rs.next())
+            {
+                last_inserted_id = rs.getInt(1);
+            }
+            JStyleDbObject res = new JStyleDbObject();
+            res.userid = userid;
+            res.updatetime = dt0;
+            res.createtime = dt0;
+            res.styleContent = content;
+            res.description = desc;
+            res.styleid = last_inserted_id;
+            return res;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbNewStyle exception , " + ex.getMessage() ) ;
+            return null;
+        }
+    }
+
+    //2022-9-14 delete Style
+    public boolean rdbDeleteStyle( int styleid ){
+
+        try{
+            //update  DELETE FROM table_name [WHERE Clause]
+            String query2 = "DELETE FROM tbstyle where styleid = ?";
+            PreparedStatement preparedStmt2 = JRDBHelperForWebservice.getConnection().prepareStatement(query2);
+            preparedStmt2.setInt      (1, styleid);
+            preparedStmt2.executeUpdate();
+            return true ;
+        }catch (Exception ex )
+        {
+            System.out.println("Error : rdbDeleteStyle exception , " + ex.getMessage() ) ;
+            return false ;
+        }
+    }
+
+
+    /// 2022-9-14 select style of user
+    public ArrayList<JStyleDbObject> rdbStyleListByUid(int uid )
+    {
+        try {
+            Statement stmt = JRDBHelperForWebservice.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * "
+                    +" FROM tbstyle WHERE userid="+ String.valueOf(uid)
+                    +" ORDER BY styleid DESC "
+                    +" LIMIT 100 ") ;
+            ArrayList<JStyleDbObject> retlist = new ArrayList<>() ;
+            while (rs.next()) {
+                JStyleDbObject s1 = new JStyleDbObject() ;
+
+                s1.userid = rs.getInt(3);
+                s1.updatetime = rs.getString(6);
+                s1.createtime = rs.getString(5);
+                s1.styleContent = rs.getString(2);
+                s1.description = rs.getString(4);
+                s1.styleid = rs.getInt(1);
+
+                retlist.add(s1) ;
+            }
+            return retlist;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()) ;
+            return null;
+        }
+    }
 
 
 

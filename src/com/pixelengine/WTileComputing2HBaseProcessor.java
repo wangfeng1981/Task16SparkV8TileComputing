@@ -134,6 +134,7 @@ public class WTileComputing2HBaseProcessor implements Serializable {
         String projStr = "" ;
         Long hcolForDs0Dt0 =  dsnameDtsArr.get(0).dtarr.get(0) ;
         int maxZoom = 12;
+        int firstGoodStyleid = 0 ;
         for( int ids = 0 ; ids< dsnameDtsArr.size() ; ++ ids ){
             JProduct pinfo = rdb.rdbGetProductInfoByName(dsnameDtsArr.get(ids).dsname) ;
             if( ids==0 ){
@@ -146,6 +147,9 @@ public class WTileComputing2HBaseProcessor implements Serializable {
                     return 22;
                 }
                 if( pinfo.maxZoom < maxZoom) maxZoom = pinfo.maxZoom ;//取值最小的level
+            }
+            if( pinfo.styleid>=0 &&  firstGoodStyleid == 0 ){
+                firstGoodStyleid = pinfo.styleid;
             }
         }
 
@@ -357,7 +361,7 @@ public class WTileComputing2HBaseProcessor implements Serializable {
         System.out.println("write data item records ok:" + dataitemId);
 
         //update mysql tbproduct record
-        String pdtName = "user/" + tcHbOrder.mpid_hpid ;
+
         boolean updatepdtok = rdb.updateProductInfo(tcHbOrder.mpid_hpid,
                 projStr,
                 0,
@@ -367,14 +371,13 @@ public class WTileComputing2HBaseProcessor implements Serializable {
                 tcHbOrder.out_htable,
                 256,256,
                 "deflate" ,
-                0
+                firstGoodStyleid
         ) ;
         if( updatepdtok==false){
             System.out.println("failed to update pdt info.");
             writeResultJson(26,0,"failed to update pdt info.");
             return 26 ;
         }
-        System.out.println("update pdt name and info ok:" + pdtName);
 
 
         //done.

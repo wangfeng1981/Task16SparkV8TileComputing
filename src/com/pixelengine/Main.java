@@ -98,7 +98,8 @@ public class Main {
         //1.增加脚本序列分析
         //2.序列分析结果排序
         //3.update java files.
-        System.out.println("v2.3.3.0d add serial compute for script product. 2022-9-9");
+        //4.update product style by first >=0 styleid.
+        System.out.println("v2.3.4.2 2022-9-14");
 
 
         System.out.println("usage:");
